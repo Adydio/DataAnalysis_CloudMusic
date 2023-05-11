@@ -1,0 +1,168 @@
+---
+title: "DataAnalysis_CloudMusic"
+author: "Yukun Dong"
+date: "2023-05-10"
+output: 
+  html_document:
+    toc: true
+    css: all1.css
+    toc_float: true
+    toc_depth: 4
+---
+
+# 网易云音乐数据分析
+
+## 1.背景
+
+### 1.1背景与目标
+
+今年四月底，各大网友“册封”华语乐坛“新四大天王”。这四位分别是华晨宇，王琳凯，Capper和姜云升。值得注意的是，这一次“新四大天王”的评选是具有一定审丑性质的。以本文即将分析的Capper的作品《雪distance》和姜云升的作品《真没睡》为例，这两首歌曲都具有歌词质量低、审美价值低的特点，却在近期爆火。我认为这些作品的爆火，与歌手在场下的“迷惑言论”和近期对于这些歌手或者这些作品的负面爆料有关，并且我拟用自己获取的数据证明这一点。
+
+网易云音乐是一款火爆的听歌软件，聚集了大量年轻受众。值得一提的是，相比于QQ音乐等一流听歌软件，网易云音乐的评论数往往是前者的好几倍，我认为这其中的原因是微妙而复杂的。作为一位“村龄”五年的网易云音乐深度用户，我认为网易云爆火原因之一就是它善于营造“氛围”。如今的年轻人物质丰富但也面临着前所未有的压力。情感的压抑，生活的不顺让他们诉诸歌曲，寻求慰藉。而网易云音乐创造的“云村”，“抱一抱”等小功能，还有简约不简单的页面设计，小众但精华的曲库，精准的每日推送以及走心的听歌报告给了年轻人最好的答案。而我此次作业的目标，就是结合时事分析华语乐坛“新四大天王”爆火的原因，发掘数据背后的一些规律并且给出自己的评价和解释，再通过自己收集的数据，分析网易云音乐这一软件的一些特点。
+
+### 1.2数据来源
+
+运用python，调用网易云音乐评论的API，整理数据得到Excel文件。部分数据来源于课程群，如`stopwords.txt`。
+
+## 2.获取数据
+
+参见`pre-processing.ipynb`这是调用API后再用自己编写的函数整合复杂的嵌套`json`文件得到的结果，代码是经过高度简化的，原理上利用我的这些代码可以获取网易云音乐任何一首歌曲的所有评论。
+另外一部分是课程群里的数据，在data文件夹中。
+
+## 3.数据读取与预处理
+
+我们先着手分析歌手Capper的新作《雪Distance》的评论。
+
+```{r}
+xd <- read.table(file = "xue_distance_final.csv",header = TRUE,encoding = 'UTF-8',sep = ",",comment.char = "",quote = "",fill = TRUE, allowEscapes = TRUE) # 读入数据
+xd <- xd[,-11]
+xd <- xd[,-1]
+xd <- xd[,-1]
+xd <- xd[,-1]# 删除前三列和最后一列，这是在调用api之后再处理多出来的
+summary(xd)
+```
+| 变量名   |  含义      |
+|:------:|:-----------:|
+| userid |    发表评论者的id  |
+| commentid    |       留言的编号   |
+| username  |      发表评论者的昵称   |
+| content | 评论内容 |
+| timeStr | 发表评论的日期 |
+| likedcount | 点赞次数 |
+| ip | ip属地 |
+
+Table: 变量解释
+
+变量的类型有的不正确，需要修改：
+
+```{r}
+xd[,"timeStr"] <- as.Date(xd[,"timeStr"])
+xd[is.na(xd[,"userid"])==TRUE,]
+xd[is.na(xd[,"likedcount"])==TRUE,]
+xd[is.na(xd[,"commentid"])==TRUE,]
+head(xd,5)
+```
+可见日期的格式已经转换成功，并且用户id，评论id以及点赞数并无缺失值，这很好。下一步就做数据类型转换。
+
+```{r}
+xd[,"userid"] <- as.numeric(xd[,"userid"])
+xd[,"likedcount"] <- as.numeric(xd[,"likedcount"])
+xd[,"commentid"] <- as.numeric(xd[,"commentid"])
+cat("去除NA前的评论数",nrow(xd))
+xd <- na.omit(xd)
+cat("去除NA后的评论数",nrow(xd))
+```
+因为爬数据过程中，userid难免会带上奇怪的符号，而样本量足够大，我们索性直接去掉含有NA的行，对结果影响不大。
+
+## 4.数据分析
+
+### 4.1《雪Distance》歌曲评论全面分析
+
+#### 4.1.1评论个数随时间的分布
+
+我们先着眼于《雪Distance》的评论。这首歌于2023年3月1日在网易云音乐上发布，而在接下来的两个月中，这首歌先是被曝有重大抄袭嫌疑，再就是在4月9日歌手Capper在沈阳巡演时发表攻击性极强的言论引发网民不满，这在另一种程度上促进了该歌曲进一步“出圈”爆火，因此，我们先来看看评论数量随时间的分布情况。
+
+```{r}
+library(ggplot2)
+comment_distribution_time <- ggplot(data = xd, aes(x=timeStr)) + geom_histogram(aes(y=..density..), color = "black", fill="white", binwidth = 1) + 
+ geom_density(alpha=0.2, fill="green") + labs(x = "时间", y = "评论数") + ggtitle("评论数量随时间的分布") + theme(plot.title = element_text(hjust = 0.5))
+comment_distribution_time
+```
+
+这个结果能反映一些事实。首先，歌曲在前20天的表现足以说明歌手Capper的热度之高。在新歌发布的前四天就有上万条评论的迅速累积，以及在3月4日单日评论近万，这是非常少见的，可见歌手本身是具有大量的粉丝群体的。在前四天热度短暂高潮后，随着越来越多的人涌入歌曲，外加歌曲已经积累了两万条评论的基础，导致在20天左右歌曲热度再次上升，最后热度渐渐饱和，每天的评论数稳定增长，而每日的增长数有明显下行趋势。这仿佛是每一首流行歌曲的归宿，除非有特殊的事件发生，才能再一次将歌曲的热度唤醒。而我们看到，在四月中旬，歌曲的热度奇迹般回升，歌曲迎来了又一次热度的小高潮。我们观察到歌曲每日评论数的“鞍点”就在4月10日左右，正好对应歌手Capper极具争议的演唱会时间4月9日。为了进一步展现此次事件与歌曲热度的相关性，我将继续分析歌曲评论的群体变化以及评论内容的情感变化。
+
+#### 4.1.2初见端倪，揭秘“狂热粉丝”
+
+我们开始着眼于观察评论群体的分布。众所周知，在各大音乐软件都存在着多多少少的“饭圈”现象。死忠粉刷评论这件事情也是喜闻乐见了。在数以万计的评论中，必然会出现狂热的粉丝刷评论的现象。我们来观察狂热粉丝的数量以及他们活跃时间的分布。
+
+```{r}
+xd_user <- table(xd$userid) # 将所有的评论按userid统计频数
+xd_user <- sort(xd_user, decreasing = TRUE)
+xd_user[1:35]
+```
+我们发现死忠粉数量惊人之多！如果将发10条评论以上的评论者定义为“狂热粉丝”，我们来计算一下狂热粉丝的评论有多少：
+
+```{r}
+fans <- xd_user[xd_user[]>=10]
+ans <- 0
+for (i in 1:length(fans)) {
+  ans <- ans + fans[i]
+}
+cat("狂热粉丝贡献的评论数：",ans)
+```
+此外我们再看看这些死忠粉都发了些什么：
+```{r}
+xd[xd[,"userid"]==as.numeric(labels(xd_user)[[1]][1]),"content"][1:10]
+xd[xd[,"userid"]==as.numeric(labels(xd_user)[[1]][2]),"content"][1:10]
+xd[xd[,"userid"]==as.numeric(labels(xd_user)[[1]][3]),"content"][1:10]
+xd[xd[,"userid"]==as.numeric(labels(xd_user)[[1]][4]),"content"][1:10]
+xd[xd[,"userid"]==as.numeric(labels(xd_user)[[1]][5]),"content"][1:10]
+```
+
+这个数目无疑是惊人的。狂热粉丝贡献了数以万计的评论，可见歌曲评论区的水分之多。我们知道，在网易云音乐里面，对于所谓“网红歌曲”，评论过万的歌曲是一个分水岭，短时间内过万就表示这首歌彻彻底底的“红了”，从而能够吸引更多的听众，形成正反馈效应，在短时间内还可以继续收割一部分听众。而一些真正有内涵的歌曲，“去饭圈化”的好歌曲，评论数增长往往不是快餐式的急剧增长，而是随着口碑的积累缓慢爬升。
+
+评论数排名前五的狂热粉丝们给我们展示了评论区“水评论”的众生相。既有疯狂输出情绪的，又有脑残支援歌手的饭圈文案，还有一些无意义的灌水评论。从这里就可以看出，在狂热粉丝的加持下，这首《雪Distance》的热度一定程度上是被“炒起来的”，也侧面说明了这首歌的“网红“性质早已逾越了歌曲本身的性质。
+
+接下来，我们感兴趣的是，这些狂热粉丝都活跃在什么时候？这些评论一般在何时出现呢？这或许能反映一些问题。
+
+```{r}
+fans_id <- as.numeric(labels(fans)[[1]]) #狂热粉丝的id
+fans_comments <- xd[xd[,"userid"] %in% fans_id,] #狂热评论的切片
+fanscomments_distribution_time <- ggplot(data = fans_comments, aes(x=timeStr)) + geom_histogram(aes(y=..density..), color = "black", fill="white", binwidth = 1) + 
+ geom_density(alpha=0.2, fill="red") + labs(x = "时间", y = "评论数") + ggtitle("狂热粉丝评论数量随时间的分布") + theme(plot.title = element_text(hjust = 0.5))
+fanscomments_distribution_time
+```
+结果令人惊讶！灌水评论几乎集中于3月5日。我们回顾一下先前打印的狂热粉丝的评论内容，除了第一位粉丝发的内容与情感有关，其余粉丝的内容评论毫无价值可言，甚至有大量重复。考察一下他们发布的日期：
+
+```{r}
+xd[xd[,"userid"]==as.numeric(labels(xd_user)[[1]][1]),"timeStr"][10]
+xd[xd[,"userid"]==as.numeric(labels(xd_user)[[1]][2]),"timeStr"][10]
+xd[xd[,"userid"]==as.numeric(labels(xd_user)[[1]][3]),"timeStr"][10]
+xd[xd[,"userid"]==as.numeric(labels(xd_user)[[1]][4]),"timeStr"][10]
+xd[xd[,"userid"]==as.numeric(labels(xd_user)[[1]][5]),"timeStr"][10]
+march5th_comments <- table(xd$timeStr)["2023-03-05"]
+march5th_fans_comments <- table(fans_comments$timeStr)["2023-03-05"]
+cat("3月5日评论总数为",march5th_comments,"，3月5日水军评论总数为",march5th_fans_comments)
+```
+可见，无意义评论更多聚集在3月5日。可以断定，这一天的评论绝大多数是“水军出击”给刷出来的。这对于歌曲热度提升有着推波助澜的作用，但这种现象对于“饭圈化”尚不严重的网易云音乐来说，无疑是相当可悲的。
+
+#### 4.1.3歌曲风评研究之情感变化
+
+我们将目光转向歌曲的“风评”变化。换言之，接下来我们即将研究评论的关键词和情感的变化。一个无法反驳的事实是，这首《雪Distance》的风评如今是非常烂的，我们在意的是导致此般现象的转折点在哪里，导致这种变化的原因是什么。首先，我们研究评论的情感变化。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
