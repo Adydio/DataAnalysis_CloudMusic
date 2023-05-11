@@ -76,9 +76,9 @@ cat("去除NA后的评论数",nrow(xd))
 
 ## 4.数据分析
 
-### 4.1《雪Distance》歌曲评论全面分析
+### 4.1 《雪Distance》歌曲评论全面分析
 
-#### 4.1.1评论个数随时间的分布
+#### 4.1.1 评论个数随时间的分布
 
 我们先着眼于《雪Distance》的评论。这首歌于2023年3月1日在网易云音乐上发布，而在接下来的两个月中，这首歌先是被曝有重大抄袭嫌疑，再就是在4月9日歌手Capper在沈阳巡演时发表攻击性极强的言论引发网民不满，这在另一种程度上促进了该歌曲进一步“出圈”爆火，因此，我们先来看看评论数量随时间的分布情况。
 
@@ -91,7 +91,7 @@ comment_distribution_time
 
 这个结果能反映一些事实。首先，歌曲在前20天的表现足以说明歌手Capper的热度之高。在新歌发布的前四天就有上万条评论的迅速累积，以及在3月4日单日评论近万，这是非常少见的，可见歌手本身是具有大量的粉丝群体的。在前四天热度短暂高潮后，随着越来越多的人涌入歌曲，外加歌曲已经积累了两万条评论的基础，导致在20天左右歌曲热度再次上升，最后热度渐渐饱和，每天的评论数稳定增长，而每日的增长数有明显下行趋势。这仿佛是每一首流行歌曲的归宿，除非有特殊的事件发生，才能再一次将歌曲的热度唤醒。而我们看到，在四月中旬，歌曲的热度奇迹般回升，歌曲迎来了又一次热度的小高潮。我们观察到歌曲每日评论数的“鞍点”就在4月10日左右，正好对应歌手Capper极具争议的演唱会时间4月9日。为了进一步展现此次事件与歌曲热度的相关性，我将继续分析歌曲评论的群体变化以及评论内容的情感变化。
 
-#### 4.1.2初见端倪，揭秘“狂热粉丝”
+#### 4.1.2 初见端倪，揭秘“狂热粉丝”
 
 我们开始着眼于观察评论群体的分布。众所周知，在各大音乐软件都存在着多多少少的“饭圈”现象。死忠粉刷评论这件事情也是喜闻乐见了。在数以万计的评论中，必然会出现狂热的粉丝刷评论的现象。我们来观察狂热粉丝的数量以及他们活跃时间的分布。
 
@@ -132,7 +132,8 @@ fanscomments_distribution_time <- ggplot(data = fans_comments, aes(x=timeStr)) +
  geom_density(alpha=0.2, fill="red") + labs(x = "时间", y = "评论数") + ggtitle("狂热粉丝评论数量随时间的分布") + theme(plot.title = element_text(hjust = 0.5))
 fanscomments_distribution_time
 ```
-结果令人惊讶！灌水评论几乎集中于3月5日。我们回顾一下先前打印的狂热粉丝的评论内容，除了第一位粉丝发的内容与情感有关，其余粉丝的内容评论毫无价值可言，甚至有大量重复。考察一下他们发布的日期：
+
+结果令人惊讶！灌水评论几乎集中于3月5日，几乎可以断定在这一天有系统的“水军”刷评论的行为，而后面的大量的“狂热粉丝”更有可能是路人性质的，并不是以刷评论为动机的。我们回顾一下先前打印的狂热粉丝的评论内容，除了第一位粉丝发的内容与情感有关，其余粉丝的内容评论毫无价值可言，甚至有大量重复。考察一下他们发布的日期：
 
 ```{r}
 xd[xd[,"userid"]==as.numeric(labels(xd_user)[[1]][1]),"timeStr"][10]
@@ -146,23 +147,138 @@ cat("3月5日评论总数为",march5th_comments,"，3月5日水军评论总数�
 ```
 可见，无意义评论更多聚集在3月5日。可以断定，这一天的评论绝大多数是“水军出击”给刷出来的。这对于歌曲热度提升有着推波助澜的作用，但这种现象对于“饭圈化”尚不严重的网易云音乐来说，无疑是相当可悲的。
 
-#### 4.1.3歌曲风评研究之情感变化
+#### 4.1.3 歌曲风评研究之评论情感变化
 
 我们将目光转向歌曲的“风评”变化。换言之，接下来我们即将研究评论的关键词和情感的变化。一个无法反驳的事实是，这首《雪Distance》的风评如今是非常烂的，我们在意的是导致此般现象的转折点在哪里，导致这种变化的原因是什么。首先，我们研究评论的情感变化。
 
+在研究以下问题之前，我们先删除掉这些重复的灌水评论。
 
+我们使用百度的paddlepaddle预训练模型，用模型判断用户评论信息的情感态度，分析消极和积极的占比。在`EmotionAnalysis.ipynb`中，我们得到了含有用户情感态度标签的文件`xue_emotion.csv`。值得说明的是，该模型对于一串字符会给出相应的正向、负向情感概率。由于评论里含有大量如“丁真”“泰裤辣”“依托答辩”等负面感情倾向的网络用语或影响判断，这里我采用的方法是，当且仅当正向概率大于一个不小于0.5的参数$p$时，才认定这是一个正向情绪的评论。
 
+我们接下来读取`xue_emotion.csv`，该文件是取$p=0.6$运行得到的，并且严谨起见，如果一个用户评论数不少于10条，他的评论将被移除。
 
+```{r include=FALSE}
+xd1 <- read.table(file = "xue_emotion.csv",header = TRUE,encoding = 'UTF-8',sep = ",",comment.char = "",quote = "",fill = TRUE, allowEscapes = TRUE)
+xd1 <- xd1[-which(xd1[,'userid'] %in% fans_id),]
+xd1 <- xd1[,-1]
+xd1[,"timeStr"] <- as.Date(xd1[,"timeStr"])
+xd1[,"userid"] <- as.numeric(xd1[,"userid"])
+xd1[,"new_sentiment_label"] <- as.numeric(xd1[,"new_sentiment_label"])
+xd1 <- na.omit(xd1)
+```
 
+```{r include=FALSE}
+emotion_distribution <- aggregate(xd1[,"new_sentiment_label"], by = xd1["timeStr"], mean)
+summary(emotion_distribution)
+```
+```{r}
+emotion_distribution <- aggregate(xd1[,"new_sentiment_label"], by = xd1["timeStr"], mean)
+summary(emotion_distribution)
+emotion_distribution_figure <- ggplot(data = emotion_distribution, aes(x = timeStr, y = x)) + geom_point(colour = "#FF4500") + geom_smooth(colour = "#6495ED") + labs(x = "时间", y = "正向情感指标") + ggtitle("正向情感指标数量随时间的分布(p=0.6)") + theme(plot.title = element_text(hjust = 0.5)) + ylim(0.38,0.6)
+emotion_distribution_figure
+```
 
+从图中我们看出，评论在歌曲发布初期好评如潮，可是后面的负面评论越来越多。同样地，我们再分别命参数$p=0.5,0.55,0.65,0.7$做同样的操作，得到数据框df50,df55,df65,df70。由于同样操作过多，洗数据代码略去不显示。
 
+```{r include=FALSE}
+xd50 <- read.table(file = "xue_emotion_50.csv",header = TRUE,encoding = 'UTF-8',sep = ",",comment.char = "",quote = "",fill = TRUE, allowEscapes = TRUE)
+xd50 <- xd50[-which(xd50[,'userid'] %in% fans_id),]
+xd50 <- xd50[,-1]
+xd50[,"timeStr"] <- as.Date(xd50[,"timeStr"])
+xd50[,"userid"] <- as.numeric(xd50[,"userid"])
+xd50[,"p"] <- as.numeric(xd50[,"p"])
+xd50[,"new_sentiment_label"] <- as.numeric(xd50[,"new_sentiment_label"])
+xd50 <- na.omit(xd50)
+xd55 <- read.table(file = "xue_emotion_55.csv",header = TRUE,encoding = 'UTF-8',sep = ",",comment.char = "",quote = "",fill = TRUE, allowEscapes = TRUE)
+xd55 <- xd55[-which(xd55[,'userid'] %in% fans_id),]
+xd55 <- xd55[,-1]
+xd55[,"timeStr"] <- as.Date(xd55[,"timeStr"])
+xd55[,"userid"] <- as.numeric(xd55[,"userid"])
+xd55[,"p"] <- as.numeric(xd55[,"p"])
+xd55[,"new_sentiment_label"] <- as.numeric(xd55[,"new_sentiment_label"])
+xd55 <- na.omit(xd55)
+xd65 <- read.table(file = "xue_emotion_65.csv",header = TRUE,encoding = 'UTF-8',sep = ",",comment.char = "",quote = "",fill = TRUE, allowEscapes = TRUE)
+xd65 <- xd65[-which(xd65[,'userid'] %in% fans_id),]
+xd65 <- xd65[,-1]
+xd65[,"timeStr"] <- as.Date(xd65[,"timeStr"])
+xd65[,"userid"] <- as.numeric(xd65[,"userid"])
+xd65[,"p"] <- as.numeric(xd65[,"p"])
+xd65[,"new_sentiment_label"] <- as.numeric(xd65[,"new_sentiment_label"])
+xd65 <- na.omit(xd65)
+xd70 <- read.table(file = "xue_emotion_70.csv",header = TRUE,encoding = 'UTF-8',sep = ",",comment.char = "",quote = "",fill = TRUE, allowEscapes = TRUE)
+xd70 <- xd70[-which(xd70[,'userid'] %in% fans_id),]
+xd70 <- xd70[,-1]
+xd70[,"timeStr"] <- as.Date(xd70[,"timeStr"])
+xd70[,"userid"] <- as.numeric(xd70[,"userid"])
+xd70[,"p"] <- as.numeric(xd70[,"p"])
+xd70[,"new_sentiment_label"] <- as.numeric(xd70[,"new_sentiment_label"])
+xd70 <- na.omit(xd70)
+```
 
+```{r}
+xd_ <- rbind(xd50,xd55,xd65,xd70)
+xd_ <- aggregate(xd_[,"new_sentiment_label"], by = c(xd_["timeStr"], xd_["p"]), mean)
+summary(xd_)
 
+ggplot(data = xd_,aes(x = timeStr, y = x, colour = factor(p))) + geom_point() + coord_cartesian() + facet_wrap(~ p) + theme_bw() + geom_smooth(colour = "#6495ED") + labs(x = "时间", y = "正向情感指标") + ggtitle("正向情感指标数量随时间的分布") + theme(plot.title = element_text(hjust = 0.5)) + ylim(0.28,0.6) 
+```
 
+图标的意义是十分清晰的。无论参数$p$如何选择，评论的感情分布都是现在三周之内上涨，再逐日降低。这样的原因有两点，首先，随着这首歌发布时间的推移，越来越多的网友发现这首《雪Distance》有着抄袭的嫌疑，在歌曲本身热度的加持下，涉嫌抄袭这件事情会引来各路网友前来留下评论；第二点就是歌手Capper在4月9日极具争议的巡演，他的引战言论吸引了更多的路人，为歌曲带来了更多的（负面的）热度。从图中也看到，四月中旬之后，歌曲的风评不但没有达到饱和，还有雪上加霜之势。
 
+下面，我们继续从评论本身的特点，来探究歌曲的风评转变。
 
+#### 4.1.4 歌曲风评研究之关键词 
 
+我们首先关注评论的词云，了解大致有哪些关键词。在这里我们再次利用百度开发的基于Python的LAC分词模型。生成云图的文件参见`WordCloud.ipynb`，其中LAC起分词作用，而wordcloud库负责生成云图。为了贴合网易云音乐的样式，背景被设定为其logo的形状：
 
+```{r q-pic, echo=FALSE, out.width="50%", dpi = 72,out.height="50%",fig.align = 'center'}
+knitr::include_graphics(path = "img/1.png")
+```
 
+这张词云图可谓是包罗万象了。我们看到还是有很多正面评价如“喜欢”“好听”，可见这首歌曲旋律本身还是有可圈可点之处的。我们还观察到很多与歌词相关的内容，如“雪”“冷”“桥牌”等，这一类评论时常出现，说明听众沉浸其中，与歌词产生了共鸣。还有一类关键词引人注目，便是各种负面词汇，有结合时事的，如“抄袭”“泰裤辣”（时下热梗）；也有拿热门负面词汇含沙射影的，如“电子烟”“丁真”“答辩（大便）”等词竟然有着很高的出场频率，这说明这首歌也引来了不少骂声，而这种批判既是隐晦的，又是随波逐流的。换言之，这首歌招来外界的骂声，这些骂声仿佛都是一致的，发表负面评论的人（也称作“黑子”）他们骂这首歌的“骂法”近乎都是一致的，无非是“抄袭”“丁真”“答辩”此类词汇，而我们却鲜见对这首歌客观、冷静的批判，如“歌词写的不好”“唱腔矫揉造作”等等。这种现象我认为不是好的现象，当这首歌成为热点，越来越多的路人关注这件事情，他们做的竟然是“跟风黑”“无脑喷”，而不是
+认真听完、客观地发表他们的见解，这很大程度证实了网易云音乐的很多用户，很容易被外界“带节奏”，很喜欢去评论区“冲塔”“看乐子”。
 
+当然，暖心的是，词云背后还有一些网易云音乐“特有的”词汇，如“想你”“幸福”“想你”“希望”等。这些词汇脱离了歌曲本身，生动地诠释了网易云音乐的评论区独有的“树洞”属性。随着评论的累积，对于评论区，其内容往往会脱离歌曲本身，反而化身年轻人释放情感、互相交流、抚慰的场所。评论区的这种特色让网易云音乐无法被任何其他的网站取代，我们也可以看到，在网易云音乐的评论区，每一个角落都有正能量的存在。
 
+在这之外，我们还可以观察三月份和四月份的评论关键词，可以看出听众明显的情绪变化：
+
+```{r echo=FALSE, out.width="100%", dpi = 72,out.height="100%",fig.align = 'center'}
+knitr::include_graphics(path = "img/2.png")
+```
+
+接下来，我们来统计一下词频。从原评论文件中切片处理得到了`word_freq_march.csv`,`word_freq_april.csv`。分别读取并且绘制热度最高的词如下：
+
+```{r}
+xd_march <- read.table(file = "word_freq_march.csv",header = TRUE,encoding = 'UTF-8',sep = ",",comment.char = "",quote = "",fill = TRUE, allowEscapes = TRUE)
+xd_march <- xd_march[order(xd_march$value, decreasing = TRUE)[1:10],c(2,3)]
+plot_march <- ggplot(data = xd_march,aes(x=reorder(key,-value),y=value,fill=key,group=factor(1))) + geom_bar(stat = "identity") + labs(x = "", y = "出现次数") + ggtitle("三月评论高频词") + theme(plot.title = element_text(hjust = 0.5))
+plot_march
+```
+
+我们看到，三月份是歌曲刚出的一个月，这个时候风评尚好，反对的声音还没来袭。词频前十名的热词没有贬义词，基本上都是好评，或者是诸如“冷”“雪”“远”“一点”这样的歌词原句。我们再来看四月份的热词：
+
+```{r}
+xd_april <- read.table(file = "word_freq_april.csv",header = TRUE,encoding = 'UTF-8',sep = ",",comment.char = "",quote = "",fill = TRUE, allowEscapes = TRUE)
+xd_april <- xd_april[order(xd_april$value, decreasing = TRUE)[1:10],c(2,3)]
+plot_april <- ggplot(data = xd_april,aes(x=reorder(key,-value),y=value,fill=key,group=factor(1))) + geom_bar(stat = "identity") + labs(x = "", y = "出现次数") + ggtitle("四月评论高频词") + theme(plot.title = element_text(hjust = 0.5))
+plot_april
+```
+
+四月份的评论就充斥着负面情绪了，而且，由于分词器的限制，“喜欢”可能是从“不喜欢”一词里面拆分开来的，因此这个图的负面词汇是比展现出来的要多的。
+
+#### 4.1.5 歌曲受众的地域分布
+
+API返回的诸多参数中还包含用户的ip属地，一个自然的想法就是去探究，这些评论者都来自哪里，会不会来自某个特定区域的人会特别多？接下来我们来探究此事。
+
+首先按照用户id，提取他们的ip。
+
+```{r}
+foo <- function(x){
+  return(length(x))
+}
+user_ip <- aggregate(xd[,"userid"], by = xd["ip"],foo)
+head(user_ip)
+write.csv(user_ip, file = "ip.csv")
+```
+
+由于python的`pyecharts`库中有中国地图相关的函数，下面转入`IpDistribution.ipynb`生成地图的分布。
