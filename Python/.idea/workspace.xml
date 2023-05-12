@@ -1,7 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="24b30d49-126e-4fa2-9611-f2f148116d33" name="变更" comment="" />
+    <list default="true" id="24b30d49-126e-4fa2-9611-f2f148116d33" name="变更" comment="">
+      <change beforePath="$PROJECT_DIR$/../DataAnalysis_CloudMusic.Rmd" beforeDir="false" afterPath="$PROJECT_DIR$/../DataAnalysis_CloudMusic.Rmd" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../DataAnalysis_CloudMusic.html" beforeDir="false" afterPath="$PROJECT_DIR$/../DataAnalysis_CloudMusic.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/IpDistribution.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/IpDistribution.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ip.csv" beforeDir="false" afterPath="$PROJECT_DIR$/ip.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../README.md" beforeDir="false" afterPath="$PROJECT_DIR$/../README.md" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -67,21 +73,11 @@
       <updated>1683546827077</updated>
       <workItem from="1683546831474" duration="1792000" />
       <workItem from="1683636453568" duration="5000" />
+      <workItem from="1683916501966" duration="12000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
-  </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/main.py</url>
-          <line>8</line>
-          <option name="timeStamp" value="1" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
   </component>
 </project>
