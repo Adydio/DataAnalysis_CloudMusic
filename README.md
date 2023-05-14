@@ -2,6 +2,8 @@
 
 调用的API：https://binaryify.github.io/NeteaseCloudMusicApi/#/?id=neteasecloudmusicapi
 
+项目仓库：https://github.com/Adydio/DataAnalysis_CloudMusic
+
 参考资料：
 
 - https://zhuanlan.zhihu.com/p/470799232
